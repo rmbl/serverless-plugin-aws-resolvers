@@ -5,6 +5,23 @@ import winston from 'winston'
 const AWS_PREFIX = 'aws'
 
 /**
+ * @param key the name of the ElastiCache cluster to resolve
+ * @param awsParameters parameters to pass to the AWS.ElastiCache constructor
+ * @returns {Promise<AWS.ElastiCache.CacheCluster>}
+ * @see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ElastiCache.html#describeCacheClusters-property
+ */
+async function getECSValue(key, awsParameters) {
+  winston.debug(`Resolving ElastiCache cluster with name ${key}`)
+  const ecs = new AWS.ElastiCache({ ...awsParameters, apiVersion: '2015-02-02' })
+  const result = await ecs.describeCacheClusters({ CacheClusterId: key }).promise()
+  if (!result || !result.CacheClusters.length) {
+    throw new Error(`Could not find ElastiCache cluster with name ${key}`)
+  }
+
+  return result.CacheClusters[0]
+}
+
+/**
  * @param key the name of the ElasticSearch cluster to resolve
  * @param awsParameters parameters to pass to the AWS.ES constructor
  * @returns {Promise<AWS.ES.ElasticsearchDomainStatus>}
@@ -141,6 +158,7 @@ async function getRDSValue(key, awsParameters) {
 }
 
 const AWS_HANDLERS = {
+  ecs: getECSValue,
   ess: getESSValue,
   kinesis: getKinesisValue,
   dynamodb: getDynamoDbValue,
