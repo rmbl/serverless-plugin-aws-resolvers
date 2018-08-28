@@ -13,7 +13,7 @@ const AWS_PREFIX = 'aws'
 async function getECSValue(key, awsParameters) {
   winston.debug(`Resolving ElastiCache cluster with name ${key}`)
   const ecs = new AWS.ElastiCache({ ...awsParameters, apiVersion: '2015-02-02' })
-  const result = await ecs.describeCacheClusters({ CacheClusterId: key }).promise()
+  const result = await ecs.describeCacheClusters({ CacheClusterId: key, ShowCacheNodeInfo: true }).promise()
   if (!result || !result.CacheClusters.length) {
     throw new Error(`Could not find ElastiCache cluster with name ${key}`)
   }
@@ -166,8 +166,11 @@ const AWS_HANDLERS = {
   ec2: getEC2Value
 }
 
-const DEFAULT_AWS_PATTERN = /^aws:\w+:[\w-.]+:[\w.]+$/
-const SUB_SERVICE_AWS_PATTERN = /^aws:\w+:\w+:[\w-.]+:[\w.]+$/
+/* eslint-disable no-useless-escape */
+const DEFAULT_AWS_PATTERN = /^aws:\w+:[\w-.]+:[\w.\[\]]+$/
+const SUB_SERVICE_AWS_PATTERN = /^aws:\w+:\w+:[\w-.]+:[\w.\[\]]+$/
+/* eslint-enable no-useless-escape */
+
 /**
  * @param variableString the variable to resolve
  * @param region the AWS region to use
